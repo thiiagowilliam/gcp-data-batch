@@ -7,3 +7,7 @@ steps:
       - |
         echo "Hello World! Autenticado com sucesso no GCP via Cloud Build."
         echo "A Service Account injetada foi: $_GCP_SERVICE_ACCOUNT"
+
+# ADICIONE ESTE BLOCO AQUI PARA RESOLVER O ERRO
+options:
+  logging: CLOUD_LOGGING_ONLY
