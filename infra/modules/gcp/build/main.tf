@@ -62,8 +62,7 @@ resource "google_cloudbuild_trigger" "repo-trigger" {
       branch = "^${var.github_branch}$"
     }
   }
-  included_files = ["airflow/dags/**"]
   substitutions = {
-    "_GCP_SERVICE_ACCOUNT" = local.cb_sa_email
+    "_GCP_SERVICE_ACCOUNT" = var.bucket_name
   }
 }
