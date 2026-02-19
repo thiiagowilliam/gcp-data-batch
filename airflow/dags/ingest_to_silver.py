@@ -33,7 +33,7 @@ with DAG(
         prefix=PREFIX_PATH,
         poke_interval=60,
         timeout=7200,
-        mode='poke'
+        mode='reschedule'
     )
 
     carrega_csv_no_bq = GCSToBigQueryOperator(
