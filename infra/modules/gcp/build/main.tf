@@ -68,5 +68,6 @@ resource "google_cloudbuild_trigger" "this" {
       branch = "^${var.github_branch}$"
     }
   }
+  included_files = var.included_files
   substitutions = var.trigger_substitutions
 }

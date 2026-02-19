@@ -9,6 +9,7 @@ resource "google_composer_environment" "this" {
     }
     software_config {
       image_version = var.composer_image_version
+      env_variables = var.env_variables
     }
   }
 }

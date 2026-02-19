@@ -22,17 +22,24 @@ module "gcs_bucket" {
   depends_on                  = [module.kms]
 }
 
-# module "composer" {
-#   source                 = "./modules/gcp/composer"
-#   region                 = var.region
-#   project_id             = var.project_id
-#   composer_name          = var.composer_name
-#   composer_image_version = var.composer_image_version
-#   composer_sa            = module.iam.composer_worker.id
-#   depends_on             = [module.kms, module.iam]
-# }
+module "composer" {
+  source                 = "./modules/gcp/composer"
+  region                 = var.region
+  project_id             = var.project_id
+  composer_name          = var.composer_name
+  composer_image_version = var.composer_image_version
+  composer_sa            = module.iam.composer_worker.id
+  depends_on             = [module.kms, module.iam]
+  env_variables = {
+    "AIRFLOW_GCP_PROJECT_ID"   = var.project_id
+    "AIRFLOW_GCP_BUCKET_NAME"  = module.gcs_bucket.bucket_name
+    "AIRFLOW_GCP_PREFIX_PATH"  = "datalake/"
+    "AIRFLOW_GCP_DATASET_NAME" = module.bigquery_dataset.dataset.name
+    "AIRFLOW_GCP_TABLE_NAME"   = module.bigquery_dataset.table.name
+  }
+}
 
-module "bigquery_dataset_churn" {
+module "bigquery_dataset" {
   source        = "./modules/gcp/bigquery"
   env           = var.env
   tables        = var.tables
@@ -53,12 +60,15 @@ module "cloudbuild" {
   github_repo             = var.github_repo
   github_owner            = var.github_owner
   github_branch           = var.github_branch
-  trigger_substitutions = var.trigger_substitutions
+  included_files          = [var.included_files]
   oauth_token_secret      = var.oauth_token_secret
   app_installation_id     = var.app_installation_id
   cloudbuild_trigger_name = var.cloudbuild_trigger_name
   cloudbuild_trigger_path = var.cloudbuild_trigger_path
-  depends_on              = [module.gcs_bucket]
+  trigger_substitutions = {
+    "_BUCKET_NAME" = module.composer.composer_bucket_name
+  }
+  depends_on = [module.gcs_bucket]
 }
 
 

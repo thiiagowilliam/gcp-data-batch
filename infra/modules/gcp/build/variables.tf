@@ -7,9 +7,7 @@ variable "oauth_token_secret" {}
 variable "app_installation_id" {}
 variable "region" {}
 variable "project_id" {}
-
+variable "included_files" {}
 variable "trigger_substitutions" {
-  description = "Variáveis de substituição para o trigger do Cloud Build"
   type        = map(string)
-  default     = {}
 }

@@ -5,7 +5,6 @@ steps:
     args:
       - '-c'
       - |
-        # CORREÇÃO: Adicionado o $ na frente da variável de substituição
         gcloud storage cp -r airflow/dags/* gs://$_BUCKET_NAME/dags/
 
 options:
