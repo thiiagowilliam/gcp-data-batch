@@ -1,5 +1,3 @@
-# Projeto de Portfólio de Engenharia de Dados com GCP
-
 Este é um projeto de pipeline de dados construído na Google Cloud Platform (GCP). O projeto demonstra uma arquitetura medalhão (Bronze, Silver) para processamento de dados, com um forte foco em qualidade de dados e infraestrutura como código.
 
 ## Arquitetura
