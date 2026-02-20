@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.providers.google.cloud.sensors.gcs import GCSObjectsWithPrefixExistenceSensor
-from airflow.providers.google.cloud.operators.dataproc import DataprocCreateBatchOperator
+from airflow.operators.python import PythonOperator
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
 import os
+from ingest_to_silver import process_silver_layer
 
 PROJECT_ID   = os.getenv("AIRFLOW_VAR_GCP_PROJECT_ID")
 BUCKET_NAME  = os.getenv("AIRFLOW_VAR_GCP_BUCKET_NAME")
@@ -26,7 +27,7 @@ with DAG(
     start_date=datetime(2023, 1, 1),
     schedule_interval='@daily',
     catchup=False,
-    tags=['gcs', 'pyspark', 'bigquery'],
+    tags=['gcs', 'pandas', 'bigquery'],
 ) as dag:
 
     for tabela in TABELAS:
@@ -34,22 +35,19 @@ with DAG(
             task_id=f'espera_por_arquivo_csv_{tabela}',
             bucket=BUCKET_NAME,
             prefix=f"{PREFIX_PATH}raw/{tabela}/",
-            poke_interval=60,
+            poke_interval=120,
             timeout=7200,
             mode='reschedule'
         )
 
-        roda_pyspark = DataprocCreateBatchOperator(
-            task_id=f"roda_transformacao_pyspark_{tabela}",
-            project_id=PROJECT_ID,
-            region=REGION,
-            batch={
-                "pyspark_batch": {
-                    "main_python_file_uri": f"gs://{BUCKET_NAME}/dags/ingest_to_silver.py",
-                    "args": [BUCKET_NAME, tabela, PREFIX_PATH]
-                }
-            },
-            batch_id=f"proc-{tabela}-{{{{ ds_nodash }}}}-{{{{ task_instance.try_number }}}}"
+        roda_transformacao = PythonOperator(
+            task_id=f"roda_transformacao_pandas_{tabela}",
+            python_callable=process_silver_layer,
+            op_kwargs={
+                "bucket_name": BUCKET_NAME,
+                "table_name": tabela,
+                "prefix_path": PREFIX_PATH
+            }
         )
 
         carrega_silver_no_bq = GCSToBigQueryOperator(
@@ -62,4 +60,4 @@ with DAG(
             autodetect=True,
         )
 
-        espera_por_arquivo_csv >> roda_pyspark >> carrega_silver_no_bq
+        espera_por_arquivo_csv >> roda_transformacao >> carrega_silver_no_bq
