@@ -1,0 +1,60 @@
+{
+  "bronze_vendas": {
+    "dataset": "bronze",
+    "partition_field": "data_venda",
+    "cluster_fields": [],
+    "columns": [
+      { "name": "id", "type": "INTEGER", "mode": "REQUIRED" },
+      { "name": "cliente_id", "type": "INTEGER", "mode": "REQUIRED" },
+      { "name": "produto_id", "type": "INTEGER", "mode": "NULLABLE" },
+      { "name": "data_venda", "type": "DATE", "mode": "REQUIRED" },
+      { "name": "valor_total", "type": "FLOAT", "mode": "NULLABLE" },
+      { "name": "quantidade", "type": "INTEGER", "mode": "NULLABLE" },
+      { "name": "metodo_pagto", "type": "STRING", "mode": "NULLABLE" }
+    ]
+  },
+  "silver_vendas": {
+    "dataset": "silver",
+    "partition_field": "data_venda",
+    "cluster_fields": ["id", "cliente_id"],
+    "columns": [
+      { "name": "id", "type": "INTEGER", "mode": "REQUIRED" },
+      { "name": "cliente_id", "type": "INTEGER", "mode": "REQUIRED" },
+      { "name": "produto_id", "type": "INTEGER", "mode": "NULLABLE" },
+      { "name": "data_venda", "type": "DATE", "mode": "REQUIRED" },
+      { "name": "valor_total", "type": "FLOAT", "mode": "NULLABLE" },
+      { "name": "quantidade", "type": "INTEGER", "mode": "NULLABLE" },
+      { "name": "metodo_pagto", "type": "STRING", "mode": "NULLABLE" }
+    ]
+  },
+  "bronze_clientes": {
+    "dataset": "bronze",
+    "partition_field": "data_cadastro",
+    "cluster_fields": [],
+    "columns": [
+      { "name": "id", "type": "INTEGER", "mode": "REQUIRED" },
+      { "name": "nome", "type": "STRING", "mode": "NULLABLE" },
+      { "name": "email", "type": "STRING", "mode": "NULLABLE" },
+      { "name": "telefone", "type": "STRING", "mode": "NULLABLE" },
+      { "name": "cidade", "type": "STRING", "mode": "NULLABLE" },
+      { "name": "estado", "type": "STRING", "mode": "NULLABLE" },
+      { "name": "data_cadastro", "type": "DATE", "mode": "REQUIRED" },
+      { "name": "status", "type": "STRING", "mode": "NULLABLE" }
+    ]
+  },
+  "silver_clientes": {
+    "dataset": "silver",
+    "partition_field": "data_cadastro",
+    "cluster_fields": ["id", "estado"],
+    "columns": [
+      { "name": "id", "type": "INTEGER", "mode": "REQUIRED" },
+      { "name": "nome", "type": "STRING", "mode": "NULLABLE" },
+      { "name": "email", "type": "STRING", "mode": "NULLABLE" },
+      { "name": "telefone", "type": "STRING", "mode": "NULLABLE" },
+      { "name": "cidade", "type": "STRING", "mode": "NULLABLE" },
+      { "name": "estado", "type": "STRING", "mode": "NULLABLE" },
+      { "name": "data_cadastro", "type": "DATE", "mode": "REQUIRED" },
+      { "name": "status", "type": "STRING", "mode": "NULLABLE" }
+    ]
+  }
+}

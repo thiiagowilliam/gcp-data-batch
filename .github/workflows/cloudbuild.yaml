@@ -1,0 +1,13 @@
+steps:
+  - id: 'Deploy DAGs to GCS'
+    name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo $_BUCKET_NAME
+        gcloud storage cp -r airflow/dags/* ${_BUCKET_NAME}
+        gcloud storage cp -r contracts/* ${_BUCKET_NAME}/contracts
+
+options:
+  logging: CLOUD_LOGGING_ONLY

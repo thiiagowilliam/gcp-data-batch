@@ -2,10 +2,9 @@
 
 *.tfstate
 *.tfstate.*
+*tfvars
 
 crash.log
 
-*.tfvars
-*.tfvars.json
 
 *lock*
