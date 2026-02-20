@@ -7,6 +7,7 @@ steps:
       - |
         echo $_BUCKET_NAME
         gcloud storage cp -r airflow/dags/* ${_BUCKET_NAME}
+        gcloud storage cp -r contracts/* ${_BUCKET_NAME}/contracts
 
 options:
   logging: CLOUD_LOGGING_ONLY

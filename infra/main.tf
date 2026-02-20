@@ -33,15 +33,15 @@ module "composer" {
   env_variables = {
     "AIRFLOW_VAR_GCP_PROJECT_ID"   = var.project_id
     "AIRFLOW_VAR_GCP_BUCKET_NAME"  = module.gcs_bucket.bucket_name
-    "AIRFLOW_VAR_GCP_REGION" = var.region
-    "AIRFLOW_VAR_GCP_DATASET_NAME" = module.bigquery_dataset.dataset_id
+    "AIRFLOW_VAR_GCP_REGION"       = var.region
+    "AIRFLOW_VAR_GCP_DATASETS"    = jsonencode(module.bigquery_dataset.dataset_ids)
+    "AIRFLOW_VAR_GCP_TABLE_NAMES" = join(",", keys(local.schemas))
   }
 }
 
 module "bigquery_dataset" {
   source        = "./modules/gcp/bigquery"
   env           = var.env
-  tables        = var.tables
   friendly      = var.friendly
   location      = var.location
   project_id    = var.project_id

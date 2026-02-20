@@ -4,7 +4,6 @@ variable "location" {}
 variable "project_id" {}
 
 # BIGQUERY
-variable "tables" {}
 variable "friendly" {}
 variable "dataset_id" {}
 variable "expiration_ms" {}
