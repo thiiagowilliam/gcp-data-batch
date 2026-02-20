@@ -45,5 +45,5 @@ Toda a infraestrutura deste projeto é gerenciada com o Terraform. O código do 
 
 ## CI/CD
 
-O projeto utiliza o GitHub Actions e o Google Cloud Build para CI/CD. O arquivo `.github/workflows/cloudbuild.yaml` define um fluxo de trabalho que aciona um pipeline do Cloud Build quando as alterações são enviadas para a branch principal. Esse pipeline pode ser usado para aplicar as alterações do Terraform e implantar as DAGs do Airflow.
+O projeto utiliza o GitHub Actions e o Google Cloud Build para CI/CD. O arquivo `.github/workflows/cloudbuild.yaml` define um fluxo de trabalho que aciona um pipeline do Cloud Build quando as alterações são enviadas para a branch Develop. Esse pipeline pode ser usado para aplicar as alterações do Terraform e implantar as DAGs do Airflow.
 
