@@ -1,5 +1,4 @@
 steps:
-  # ETAPA 1: CI (Validação Rápida) - Garante que não enviaremos código quebrado para o Airflow
   - id: 'Validate Python Syntax'
     name: 'python:3.9-slim'
     entrypoint: 'bash'
@@ -10,7 +9,6 @@ steps:
         python -m compileall -q airflow/dags/
         echo "[INFO] Syntax check passed. No broken code detected."
 
-  # ETAPA 2: CD (Sincronização Seletiva e Limpa)
   - id: 'Deploy to Composer'
     name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
     entrypoint: 'bash'
