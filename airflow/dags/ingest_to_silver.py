@@ -1,16 +1,17 @@
 from datetime import datetime, timedelta
 from airflow import DAG
-from airflow.operators.python import PythonOperator
 from airflow.providers.google.cloud.sensors.gcs import GCSObjectsWithPrefixExistenceSensor
+from airflow.providers.google.cloud.operators.dataproc import DataprocCreateBatchOperator
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
 import os
-import subprocess
 
 PROJECT_ID   = os.getenv("AIRFLOW_VAR_GCP_PROJECT_ID")
 BUCKET_NAME  = os.getenv("AIRFLOW_VAR_GCP_BUCKET_NAME")
-PREFIX_PATH  = os.getenv("AIRFLOW_VAR_GCP_PREFIX_PATH")
+PREFIX_PATH  = os.getenv("AIRFLOW_VAR_GCP_PREFIX_PATH", 'datalake/')
 DATASET_NAME = os.getenv("AIRFLOW_VAR_GCP_DATASET_NAME")
-TABLE_NAME   = os.getenv("AIRFLOW_VAR_GCP_TABLE_NAME")
+REGION       = os.getenv("AIRFLOW_VAR_GCP_REGION")
+
+TABELAS = ["vendas", "clientes"]
 
 default_args = {
     'owner': 'data_team',
@@ -19,45 +20,46 @@ default_args = {
     'retry_delay': timedelta(minutes=5),
 }
 
-def print_env_vars():
-    print("=" * 75)
-    print(f"Projeto GCP: {PROJECT_ID}")
-    print(f"Bucket GCS:  {BUCKET_NAME}")
-    print(f"Dataset BQ:  {DATASET_NAME}")
-    print(f"Tabela BQ:   {TABLE_NAME}")
-    print(f"Caminho:     {PREFIX_PATH}")
-    print(subprocess.run(["env"]).stdout)
 with DAG(
-    dag_id='datalake_csv_to_bigquery',
+    dag_id='datalake_processamento_dinamico',
     default_args=default_args,
     start_date=datetime(2023, 1, 1),
     schedule_interval='@daily',
     catchup=False,
-    tags=['gcs', 'bigquery', 'sensor'],
+    tags=['gcs', 'pyspark', 'bigquery'],
 ) as dag:
-    
-    debug_vars = PythonOperator(
-        task_id='debug_vars',
-        python_callable=print_env_vars
-    # )
-    # espera_por_arquivo_csv = GCSObjectsWithPrefixExistenceSensor(
-    #     task_id='espera_por_arquivo_csv',
-    #     bucket=BUCKET_NAME,
-    #     prefix=PREFIX_PATH,
-    #     poke_interval=60,
-    #     timeout=7200,
-    #     mode='reschedule'
-    # )
 
-    # carrega_csv_no_bq = GCSToBigQueryOperator(
-    #     task_id='carrega_csv_no_bq',
-    #     bucket=BUCKET_NAME,
-    #     source_objects=[f'{PREFIX_PATH}*.csv'],
-    #     destination_project_dataset_table=f'{PROJECT_ID}.{DATASET_NAME}.{TABLE_NAME}',
-    #     source_format='CSV',
-    #     skip_leading_rows=1,
-    #     write_disposition='WRITE_APPEND',
-    #     autodetect=True,
-    )
-    debug_vars
-    # espera_por_arquivo_csv >> carrega_csv_no_bq
+    for tabela in TABELAS:
+        espera_por_arquivo_csv = GCSObjectsWithPrefixExistenceSensor(
+            task_id=f'espera_por_arquivo_csv_{tabela}',
+            bucket=BUCKET_NAME,
+            prefix=f"{PREFIX_PATH}raw/{tabela}/",
+            poke_interval=60,
+            timeout=7200,
+            mode='reschedule'
+        )
+
+        roda_pyspark = DataprocCreateBatchOperator(
+            task_id=f"roda_transformacao_pyspark_{tabela}",
+            project_id=PROJECT_ID,
+            region=REGION,
+            batch={
+                "pyspark_batch": {
+                    "main_python_file_uri": f"gs://{BUCKET_NAME}/dags/ingest_to_silver.py",
+                    "args": [BUCKET_NAME, tabela, PREFIX_PATH]
+                }
+            },
+            batch_id=f"proc-{tabela}-{{{{ ds_nodash }}}}-{{{{ task_instance.try_number }}}}"
+        )
+
+        carrega_silver_no_bq = GCSToBigQueryOperator(
+            task_id=f'carrega_silver_no_bq_{tabela}',
+            bucket=BUCKET_NAME,
+            source_objects=[f'{PREFIX_PATH}trusted/{tabela}/*.parquet'],
+            destination_project_dataset_table=f'{PROJECT_ID}.{DATASET_NAME}.{tabela}',
+            source_format='PARQUET',
+            write_disposition='WRITE_APPEND',
+            autodetect=True,
+        )
+
+        espera_por_arquivo_csv >> roda_pyspark >> carrega_silver_no_bq
